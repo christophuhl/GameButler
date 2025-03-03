@@ -27,23 +27,60 @@ const TEST_COMMAND = {
 };
 
 // Command containing options
-const CHALLENGE_COMMAND = {
-  name: 'challenge',
-  description: 'Challenge to a match of rock paper scissors',
+const GAMELIST_COMMAND = {
+  name: 'gamelist',
+  description: 'Access this server\'s game wishlist',
+  type: 1,
   options: [
     {
-      type: 3,
-      name: 'object',
-      description: 'Pick your object',
-      required: true,
-      choices: createCommandChoices(),
+      type: 1,
+      name: 'get',
+      description: 'Get a game from the wishlist',
+      options: [
+        {
+          type: 3,
+          name: 'game',
+          description: 'The game to get information about',
+          required: true
+        }
+      ]
     },
+    {
+      type: 1,
+      name: 'add',
+      description: 'Add a game to the wishlist',
+      options: [
+        {
+          type: 3,
+          name: 'game',
+          description: 'The game to add to the wishlist',
+          required: true
+        }
+      ]
+    },
+    {
+      type: 1,
+      name: 'remove',
+      description: 'Remove a game from the wishlist',
+      options: [
+        {
+          type: 3,
+          name: 'game',
+          description: 'The game to remove from the wishlist',
+          required: true
+        }
+      ]
+    },
+    {
+      type: 1,
+      name: 'show',
+      description: 'Show all games in the wishlist'
+    }
   ],
-  type: 1,
   integration_types: [0, 1],
-  contexts: [0, 2],
+  contexts: [0, 1, 2]
 };
 
-const ALL_COMMANDS = [TEST_COMMAND, CHALLENGE_COMMAND];
+const ALL_COMMANDS = [TEST_COMMAND, GAMELIST_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);

@@ -10,6 +10,7 @@ import {
 } from 'discord-interactions';
 import { getRandomEmoji, DiscordRequest } from './utils.js';
 import { getShuffledOptions, getResult } from './game.js';
+import { handleGamelistCommand } from './gamelist.js';
 
 // Create an express app
 const app = express();
@@ -24,6 +25,7 @@ const activeGames = {};
  */
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   // Interaction id, type and data
+  console.log('Received interaction:', req.body);
   const { id, type, data } = req.body;
 
   /**
@@ -43,12 +45,63 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     // "test" command
     if (name === 'test') {
       // Send a message into the channel where command was triggered from
+      console.log('Processing \'test\' command');
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           // Fetches a random emoji to send from a helper function
           content: `hello world ${getRandomEmoji()}`,
         },
+      });
+    }
+
+    // "gamelist" command
+    if (name === 'gamelist') {
+      try {
+        const response = await handleGamelistCommand({
+          data,
+          // Add only other necessary fields from req.body
+        });
+        return res.send(response);
+      } catch (error) {
+        return res.status(400).send({ error: error.message });
+      }
+    }
+
+    // "challenge" command
+    if (name === 'challenge' && id) {
+      // Interaction context
+      const context = req.body.context;
+      // User ID is in user field for (G)DMs, and member for servers
+      const userId = context === 0 ? req.body.member.user.id : req.body.user.id;
+      // User's object choice
+      const objectName = req.body.data.options[0].value;
+
+      // Create active game using message ID as the game ID
+      activeGames[id] = {
+          id: userId,
+          objectName,
+      };
+
+      return res.send({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+          content: `Rock papers scissors challenge from <@${userId}>`,
+          components: [
+          {
+              type: MessageComponentTypes.ACTION_ROW,
+              components: [
+              {
+                  type: MessageComponentTypes.BUTTON,
+                  // Append the game ID to use later on
+                  custom_id: `accept_button_${req.body.id}`,
+                  label: 'Accept',
+                  style: ButtonStyleTypes.PRIMARY,
+              },
+              ],
+          },
+          ],
+      },
       });
     }
 
