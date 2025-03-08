@@ -48,7 +48,7 @@ const GAMES_COMMAND = {
     {
       type: 1,
       name: 'get',
-      description: 'Get a game from the wishlist',
+      description: 'Get a game from the gamelist',
       options: [
         {
           type: 3,
@@ -61,12 +61,12 @@ const GAMES_COMMAND = {
     {
       type: 1,
       name: 'add',
-      description: 'Add a game to the wishlist',
+      description: 'Add a game to the gamelist',
       options: [
         {
           type: 3,
           name: 'game',
-          description: 'The game to add to the wishlist',
+          description: 'The game to add to the gamelist',
           required: true
         },
         {
@@ -82,12 +82,12 @@ const GAMES_COMMAND = {
     {
       type: 1,
       name: 'remove',
-      description: 'Remove a game from the wishlist',
+      description: 'Remove a game from the gamelist',
       options: [
         {
           type: 3,
           name: 'game',
-          description: 'The game to remove from the wishlist',
+          description: 'The game to remove from the gamelist',
           required: true
         }
       ]
@@ -95,12 +95,12 @@ const GAMES_COMMAND = {
     {
       type: 1,
       name: 'update',
-      description: 'Update a game in the wishlist',
+      description: 'Update a game in the gamelist',
       options: [
         {
           type: 3,
           name: 'game',
-          description: 'The game to update in the wishlist',
+          description: 'The game to update in the gamelist',
           required: true
         },
         {

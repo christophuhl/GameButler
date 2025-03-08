@@ -1,10 +1,10 @@
 # Game Butler 🎮 
 
-Game Butler is a Discord bot that helps manage and rank games for your server's wishlist. Keep track of games your community wants to play, rank them, and organize your gaming sessions!
+Game Butler is a Discord bot that helps manage and rank games for your server's gamelist. Keep track of games your community wants to play, rank them, and organize your gaming sessions!
 
 ## Features
 
-- **Game Management**: Add, remove, and view games in your server's wishlist
+- **Game Management**: Add, remove, and view games in your server's gamelist
 - **Game Rankings**: Score and rank games based on community interest
 - **User Tracking**: Keep track of who added games and who's interested
 - **Database Persistence**: All data is stored in PostgreSQL for reliability
@@ -16,8 +16,8 @@ gameButler/
 ├── app.js              # Main application entry point
 ├── commands.js         # Discord slash command definitions
 ├── db.js              # Database configuration and connection
-├── gamelist.js        # Game management logic
-├── testDb.js          # Database connection testing utility
+├── games.js           # Game management logic
+├── scores.js          # Game scoring and rating logic
 ├── utils.js           # Utility functions
 └── package.json       # Project dependencies and scripts
 ```
@@ -26,7 +26,7 @@ gameButler/
 
 1. **Prerequisites**
    - Node.js (v18 or higher)
-   - PostgreSQL database
+   - PostgreSQL database (I'm using NeonDB)
    - Discord Bot Token
 
 2. **Environment Variables**
@@ -40,21 +40,28 @@ gameButler/
    DB_NAME=your_db_name
    DB_PASSWORD=your_db_password
    DB_PORT=5432
+   ADMIN_ID=admin_discord_id
    ```
 
 3. **Database Setup**
    ```sql
    CREATE TABLE Games (
-       id INTEGER PRIMARY KEY,
-       name VARCHAR(255) NOT NULL,
-       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-       added_by VARCHAR(255)
+       id SERIAL PRIMARY KEY,
+       name TEXT NOT NULL,
+       price TEXT,
+       time_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       added_by_username TEXT,
+       added_by_discord_id TEXT,
+       score DECIMAL(4,2) DEFAULT 0,
+       time_updated TIMESTAMP,
+       rank INTEGER
    );
 
    CREATE TABLE Scores (
     id INTEGER PRIMARY KEY,
-    game VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
+    game TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    username TEXT NOT NULL,
     score DECIMAL(4,2)
    )
    ```
@@ -76,11 +83,14 @@ gameButler/
 
 ## Commands
 
-- `/gamelist add [game]` - Add a game to the wishlist
-- `/gamelist remove [game]` - Remove a game from the wishlist
-- `/gamelist get [game]` - Get information about a specific game
-- `/gamelist show` - Display all games in the wishlist
-- (coming soon) `/gamelist rate [game]` - Rate a game from 0-10
+- `/gamelist [limit?] [sort?] [order?]` - Get a list of all games in the gamelist (optional limit, sort by: price/score, order: ascending/descending)
+- `/games get [game]` - Get details about a specific game
+- `/games add [game] [price]` - Add a new game
+- `/games update [game] [price]` - Update a game's price
+- `/games remove [game]` - Remove a game
+- `/rate [game] [score]` - Rate a game from 0-10
+- `/ratings game [name] [limit?]` - Get ratings for a specific game (optional limit)
+- `/ratings user [name] [limit?]` - Get ratings from a specific user (optional limit)
 
 ## Development
 

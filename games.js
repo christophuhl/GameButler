@@ -56,7 +56,7 @@ async function handleGet(gameName) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: `${gameName} is not in the wishlist.`
+        content: `${gameName} is not in the gamelist.`
       }
     };
   } catch (error) {
@@ -83,7 +83,7 @@ async function handleAdd(options, user) {
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `${gameName} is already in the wishlist!`
+          content: `${gameName} is already in the gamelist!`
         }
       };
     }
@@ -97,7 +97,7 @@ async function handleAdd(options, user) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: `Added ${gameName} (Price: $${price}) to the wishlist!`
+        content: `Added ${gameName} (Price: $${price}) to the gamelist!`
       }
     };
   } catch (error) {
@@ -120,7 +120,7 @@ async function handleUpdate(options) {
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `${gameName} is not in the wishlist.`
+          content: `${gameName} is not in the gamelist.`
         }
       };
     }
