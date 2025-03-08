@@ -1,108 +1,119 @@
-# Getting Started app for Discord
+# Game Butler 🎮 
 
-This project contains a basic rock-paper-scissors-style Discord app written in JavaScript, built for the [getting started guide](https://discord.com/developers/docs/getting-started).
+Game Butler is a Discord bot that helps manage and rank games for your server's wishlist. Keep track of games your community wants to play, rank them, and organize your gaming sessions!
 
-![Demo of app](https://github.com/discord/discord-example-app/raw/main/assets/getting-started-demo.gif?raw=true)
+## Features
 
-## Project structure
-Below is a basic overview of the project structure:
+- **Game Management**: Add, remove, and view games in your server's wishlist
+- **Game Rankings**: Score and rank games based on community interest
+- **User Tracking**: Keep track of who added games and who's interested
+- **Database Persistence**: All data is stored in PostgreSQL for reliability
 
+## Project Structure
 ```
-├── examples    -> short, feature-specific sample apps
-│   ├── app.js  -> finished app.js code
-│   ├── button.js
-│   ├── command.js
-│   ├── modal.js
-│   ├── selectMenu.js
-├── .env.sample -> sample .env file
-├── app.js      -> main entrypoint for app
-├── commands.js -> slash command payloads + helpers
-├── game.js     -> logic specific to RPS
-├── utils.js    -> utility functions and enums
-├── package.json
-├── README.md
-└── .gitignore
+gameButler/
+├── .env                 # Environment variables configuration
+├── app.js              # Main application entry point
+├── commands.js         # Discord slash command definitions
+├── db.js              # Database configuration and connection
+├── gamelist.js        # Game management logic
+├── testDb.js          # Database connection testing utility
+├── utils.js           # Utility functions
+└── package.json       # Project dependencies and scripts
 ```
 
-## Running app locally
+## Setup
 
-Before you start, you'll need to install [NodeJS](https://nodejs.org/en/download/) and [create a Discord app](https://discord.com/developers/applications) with the proper permissions:
-- `applications.commands`
-- `bot` (with Send Messages enabled)
+1. **Prerequisites**
+   - Node.js (v18 or higher)
+   - PostgreSQL database
+   - Discord Bot Token
 
+2. **Environment Variables**
+   Create a `.env` file in the root directory with:
+   ```env
+   APP_ID=your_discord_app_id
+   DISCORD_TOKEN=your_discord_bot_token
+   PUBLIC_KEY=your_discord_public_key
+   DB_USER=your_db_user
+   DB_HOST=your_db_host
+   DB_NAME=your_db_name
+   DB_PASSWORD=your_db_password
+   DB_PORT=5432
+   ```
 
-Configuring the app is covered in detail in the [getting started guide](https://discord.com/developers/docs/getting-started).
+3. **Database Setup**
+   ```sql
+   CREATE TABLE Games (
+       id INTEGER PRIMARY KEY,
+       name VARCHAR(255) NOT NULL,
+       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       added_by VARCHAR(255)
+   );
 
-### Setup project
+   CREATE TABLE Scores (
+    id INTEGER PRIMARY KEY,
+    game VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    score DECIMAL(4,2)
+   )
+   ```
 
-First clone the project:
-```
-git clone https://github.com/discord/discord-example-app.git
-```
+4. **Installation**
+   ```bash
+   npm install
+   ```
 
-Then navigate to its directory and install dependencies:
-```
-cd discord-example-app
-npm install
-```
-### Get app credentials
+5. **Register Discord Commands**
+   ```bash
+   npm run register
+   ```
 
-Fetch the credentials from your app's settings and add them to a `.env` file (see `.env.sample` for an example). You'll need your app ID (`APP_ID`), bot token (`DISCORD_TOKEN`), and public key (`PUBLIC_KEY`).
+6. **Start the Bot**
+   ```bash
+   npm start
+   ```
 
-Fetching credentials is covered in detail in the [getting started guide](https://discord.com/developers/docs/getting-started).
+## Commands
 
-> 🔑 Environment variables can be added to the `.env` file in Glitch or when developing locally, and in the Secrets tab in Replit (the lock icon on the left).
+- `/gamelist add [game]` - Add a game to the wishlist
+- `/gamelist remove [game]` - Remove a game from the wishlist
+- `/gamelist get [game]` - Get information about a specific game
+- `/gamelist show` - Display all games in the wishlist
+- (coming soon) `/gamelist rate [game]` - Rate a game from 0-10
 
-### Install slash commands
+## Development
 
-The commands for the example app are set up in `commands.js`. All of the commands in the `ALL_COMMANDS` array at the bottom of `commands.js` will be installed when you run the `register` command configured in `package.json`:
-
-```
-npm run register
-```
-
-### Run the app
-
-After your credentials are added, go ahead and run the app:
-
-```
-node app.js
-```
-
-> ⚙️ A package [like `nodemon`](https://github.com/remy/nodemon), which watches for local changes and restarts your app, may be helpful while locally developing.
-
-If you aren't following the [getting started guide](https://discord.com/developers/docs/getting-started), you can move the contents of `examples/app.js` (the finished `app.js` file) to the top-level `app.js`.
-
-### Set up interactivity
-
-The project needs a public endpoint where Discord can send requests. To develop and test locally, you can use something like [`ngrok`](https://ngrok.com/) to tunnel HTTP traffic.
-
-Install ngrok if you haven't already, then start listening on port `3000`:
-
-```
-ngrok http 3000
-```
-
-You should see your connection open:
-
-```
-Tunnel Status                 online
-Version                       2.0/2.0
-Web Interface                 http://127.0.0.1:4040
-Forwarding                    https://1234-someurl.ngrok.io -> localhost:3000
-
-Connections                  ttl     opn     rt1     rt5     p50     p90
-                              0       0       0.00    0.00    0.00    0.00
+Test database connection:
+```bash
+npm run test-db
 ```
 
-Copy the forwarding address that starts with `https`, in this case `https://1234-someurl.ngrok.io`, then go to your [app's settings](https://discord.com/developers/applications).
+Run in development mode with auto-reload:
+```bash
+npm run dev
+```
 
-On the **General Information** tab, there will be an **Interactions Endpoint URL**. Paste your ngrok address there, and append `/interactions` to it (`https://1234-someurl.ngrok.io/interactions` in the example).
+Ensure Discord can connect to your local server
+- Start the ngrok tunnel to your local port 3000 with `ngrok http 3000`
+- Paste the forwarding link into your Discord Bot's Interaction Endpoint URL (append '/interactions' to it)
+  - Forwarding link should look like: "https://9dbd-67-183-159-100.ngrok-free.app"
 
-Click **Save Changes**, and your app should be ready to run 🚀
+## Contributing
 
-## Other resources
-- Read **[the documentation](https://discord.com/developers/docs/intro)** for in-depth information about API features.
-- Browse the `examples/` folder in this project for smaller, feature-specific code examples
-- Join the **[Discord Developers server](https://discord.gg/discord-developers)** to ask questions about the API, attend events hosted by the Discord API team, and interact with other devs.
-- Check out **[community resources](https://discord.com/developers/docs/topics/community-resources#community-resources)** for language-specific tools maintained by community members.
+Feel free to submit issues and enhancement requests!
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with Discord.js
+- Powered by Node.js and PostgreSQL
+- Special thanks to the Discord API team for their documentation
+- Built using Cursor, ChatGPT
+
+---
+
+Made with ❤️ by Christoph Uhl

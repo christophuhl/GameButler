@@ -1,96 +1,43 @@
 import { InteractionResponseType } from 'discord-interactions';
+import { pool } from './db.js';
 
-// You might want to replace this with a database in the future
-const gameWishlist = new Set();
 
-export async function handleGamelistCommand(data) {
-  const subcommand = data.options[0].name;
-  const subcommandOptions = data.options[0].options?.[0]?.value; // optional chaining operator
-  
-  switch (subcommand) {
-    case 'get':
-      return handleGet(subcommandOptions);
-    case 'add':
-      return handleAdd(subcommandOptions);
-    case 'remove':
-      return handleRemove(subcommandOptions);
-    case 'show':
-      return handleShow();
-    default:
-      throw new Error('Unknown subcommand');
-  }
-}
+async function showGamelist(options) {
+  try {
+    // todo: add pagination
+    const limit = options?.find(option => option.name === 'limit')?.value || 25;
+    const sort = options?.find(option => option.name === 'sort')?.value || 'score';
+    const order = options?.find(option => option.name === 'order')?.value || 'DESC';
 
-async function handleGet(gameName) {
-  if (gameWishlist.has(gameName)) {
+    console.log('Limit:', limit);
+    console.log('Sort:', sort); 
+    console.log('Order:', order);
+    const result = await pool.query(
+      'SELECT * FROM "Games" ' +
+      'ORDER BY ' + sort + ' ' + order + ' ' +
+      'LIMIT $1',
+      [limit]
+    );
+    
+    if (result.rows.length === 0) {
+      return {
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: 'The gamelist is empty!'
+        }
+      };
+    }
+    
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: `${gameName} is in the wishlist!`
+        content: `Games in gamelist (ordered by ${sort}):\n${result.rows.map((game, index) => `${index + 1}. ${game.name} (Score: ${game.score}, Price: $${game.price})`).join('\n')}`
       }
     };
+  } catch (error) {
+    console.error('Database error:', error);
+    throw new Error('Failed to fetch games from database');
   }
-  return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `${gameName} is not in the wishlist.`
-    }
-  };
-}
-
-async function handleAdd(gameName) {
-  if (gameWishlist.has(gameName)) {
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `${gameName} is already in the wishlist!`
-      }
-    };
-  }
-  
-  gameWishlist.add(gameName);
-  return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `Added ${gameName} to the wishlist!`
-    }
-  };
-}
-
-async function handleRemove(gameName) {
-  if (!gameWishlist.has(gameName)) {
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `${gameName} is not in the wishlist!`
-      }
-    };
-  }
-  
-  gameWishlist.delete(gameName);
-  return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `Removed ${gameName} from the wishlist!`
-    }
-  };
-}
-
-async function handleShow() {
-  if (gameWishlist.size === 0) {
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: 'The wishlist is empty!'
-      }
-    };
-  }
-  
-  const gameList = Array.from(gameWishlist).join('\n• ');
-  return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `Games in wishlist:\n• ${gameList}`
-    }
-  };
 } 
+
+export { showGamelist };

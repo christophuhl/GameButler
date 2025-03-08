@@ -8,16 +8,14 @@ import {
   MessageComponentTypes,
   verifyKeyMiddleware,
 } from 'discord-interactions';
-import { getRandomEmoji, DiscordRequest } from './utils.js';
-import { getShuffledOptions, getResult } from './game.js';
-import { handleGamelistCommand } from './gamelist.js';
+import { showGamelist } from './gamelist.js';
+import { handleGamesCommand } from './games.js';
+import { addOrUpdateScore, handleRatingsCommand } from './scores.js';
 
 // Create an express app
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
-// To keep track of our active games
-const activeGames = {};
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -26,7 +24,7 @@ const activeGames = {};
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   // Interaction id, type and data
   console.log('Received interaction:', req.body);
-  const { id, type, data } = req.body;
+  const { id, type, data, member } = req.body;
 
   /**
    * Handle verification requests
@@ -42,69 +40,47 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
 
-    // "test" command
-    if (name === 'test') {
-      // Send a message into the channel where command was triggered from
-      console.log('Processing \'test\' command');
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          // Fetches a random emoji to send from a helper function
-          content: `hello world ${getRandomEmoji()}`,
-        },
-      });
-    }
-
     // "gamelist" command
     if (name === 'gamelist') {
       try {
-        const response = await handleGamelistCommand({
-          data,
-          // Add only other necessary fields from req.body
-        });
+        const response = await showGamelist(data.options);
         return res.send(response);
       } catch (error) {
         return res.status(400).send({ error: error.message });
       }
     }
 
-    // "challenge" command
-    if (name === 'challenge' && id) {
-      // Interaction context
-      const context = req.body.context;
-      // User ID is in user field for (G)DMs, and member for servers
-      const userId = context === 0 ? req.body.member.user.id : req.body.user.id;
-      // User's object choice
-      const objectName = req.body.data.options[0].value;
-
-      // Create active game using message ID as the game ID
-      activeGames[id] = {
-          id: userId,
-          objectName,
-      };
-
-      return res.send({
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-          content: `Rock papers scissors challenge from <@${userId}>`,
-          components: [
-          {
-              type: MessageComponentTypes.ACTION_ROW,
-              components: [
-              {
-                  type: MessageComponentTypes.BUTTON,
-                  // Append the game ID to use later on
-                  custom_id: `accept_button_${req.body.id}`,
-                  label: 'Accept',
-                  style: ButtonStyleTypes.PRIMARY,
-              },
-              ],
-          },
-          ],
-      },
-      });
+    // "games" command
+    if (name === 'games') {
+      try {
+        const response = await handleGamesCommand(data, member);
+        return res.send(response);
+      } catch (error) {
+        return res.status(400).send({ error: error.message });
+      }
     }
 
+    // rate command
+    if (name === 'rate') {
+      try {
+        const response = await addOrUpdateScore(data.options[0].value, member.user, data.options[1].value);
+        console.log('Response:', response);
+        return res.send(response);
+      } catch (error) {
+        return res.status(400).send({ error: error.message });
+      }
+    }
+
+    // ratings command
+    if (name === 'ratings') {
+      try {
+        const response = await handleRatingsCommand(data.options[0]);
+        return res.send(response);
+      } catch (error) {
+        return res.status(400).send({ error: error.message });
+      }
+    }
+    
     console.error(`unknown command: ${name}`);
     return res.status(400).json({ error: 'unknown command' });
   }
